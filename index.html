@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>M.WILLIS DOCUMENT – ARENA</title>
+  <title>M.WILLIS LOG – ARENA</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     html {
@@ -32,24 +32,27 @@
       display: block;
     }
     #arena {
-      margin-top: 20px;
+      margin: 40px 0;
     }
     #posts-container {
-        max-width: 80vw;
-        padding-bottom: 100px;
-    }
-    .post {}
+        width: 100%;
+        display: flex;  
+        flex-wrap: wrap;
+
+      }
+    .post {
+        margin:1px;
+        width: 100px;
+        flex-grow: 1;
+      }
     .post-image {}
-    .post-text {}
-    .post-link {}
+    .post-text {min-width: 100px;border:1px solid #FFF;}
+    .post-link {padding-bottom: 4px; border:1px solid #FFF;}
     .post-link-thumbnail{
-        height: 300px;
-        width: 300px;
-        object-fit: cover;
-    }
+         }
     .post-link-content{}
     .post-media {}
-    .timestamp {margin: 4px;}
+    .timestamp {}
 
       
     #fullscreen-overlay {
@@ -191,8 +194,7 @@ const addPosts = (newPosts) => {
       case "Text":
         postElement = $(
           `<div class="post">
-            <div class="post-text">${post.content_html || "No content"}</div>
-            <div class="timestamp">${formattedDate}</div>
+            <div class="post-text">${post.content_html || "No content"}<div class="timestamp">${formattedDate}</div></div> 
           </div>`
         )[0];
         break;
@@ -210,7 +212,7 @@ const addPosts = (newPosts) => {
       case "Link":
         postElement = $(
           `<div class="post post-link">
-            <a href="${post.source.url}" target="_blank">
+            <a href="${post.source.url}" target="_blank"><span>&#8599;</span>
               ${post.image ? `<img class="post-link-thumbnail" src="${post.image.display.url}" alt="Thumbnail">` : ''}
               <div class="post-link-content">${post.generated_title || "Link"}</div></a>
               <div class="timestamp">${formattedDate}</div>

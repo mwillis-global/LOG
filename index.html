@@ -32,7 +32,7 @@
       display: block;
     }
     #arena {
-      margin: 40px 0;
+      padding: 40px 0;
     }
     #posts-container {
         width: 100%;
@@ -90,6 +90,15 @@
       60% { content: '..'; }
       80%, 100% { content: '...'; }
     }
+      
+@media only screen and (max-width: 768px) {
+
+    #arena {
+      padding: 120px 0;
+    }
+    
+ }
+
   </style>
 </head>
 <body>
@@ -98,8 +107,7 @@
     <div id="loading">Loading</div>
   </div>
 
-  <script>
-const settings = {
+  <script>const settings = {
   channelslug: "document-q8laej-t33q"
 };
 
@@ -194,7 +202,7 @@ const addPosts = (newPosts) => {
       case "Text":
         postElement = $(
           `<div class="post">
-            <div class="post-text">${post.content_html || "No content"}<div class="timestamp">${formattedDate}</div></div> 
+            <div class="post-text">${post.content_html || "No content"}</div>
           </div>`
         )[0];
         break;
@@ -203,8 +211,8 @@ const addPosts = (newPosts) => {
         postElement = $(
           `<div class="post post-media">
             <div class="media-content">
-              <iframe src="${post.embed.url}" width="300" height="200" frameborder="0" allowfullscreen></iframe></div>
-            <div class="timestamp">${formattedDate}</div>
+              <iframe src="${post.embed.url}" width="300" height="200" frameborder="0" allowfullscreen></iframe>
+            </div>
           </div>`
         )[0];
         break;
@@ -212,12 +220,24 @@ const addPosts = (newPosts) => {
       case "Link":
         postElement = $(
           `<div class="post post-link">
-            <a href="${post.source.url}" target="_blank"><span>&#8599;</span>
+            <a href="${post.source.url}" target="_blank">
+              <div class="link-content">${post.generated_title || "Link"}</div>
               ${post.image ? `<img class="post-link-thumbnail" src="${post.image.display.url}" alt="Thumbnail">` : ''}
-              <div class="post-link-content">${post.generated_title || "Link"}</div></a>
-              <div class="timestamp">${formattedDate}</div>
+            </a>
           </div>`
         )[0];
+        break;
+
+      case "Attachment":
+        postElement = $(`
+          <div class="post post-attachment">
+            <video class="post-video" controls autoplay loop muted playsinline preload="auto" poster="${post.image && post.image.thumb ? post.image.thumb.url : ''}" style="max-width: 100%; height: auto; display: block;">
+              <source src="${post.attachment.url}" type="${post.attachment.content_type}">
+              Your browser does not support the video tag.
+            </video>
+            <div class="timestamp">${formattedDate}</div>
+          </div>
+        `)[0];
         break;
 
       default:
@@ -232,7 +252,7 @@ const addPosts = (newPosts) => {
   $("#posts-container").append(fragment);
 };
 
-// Fullscreen and navigation functionality
+// Fullscreen and navigation functionality for images
 $(document).on("click", ".post-image", function () {
   const img = $(this);
   const fullSrc = img.data("full");
@@ -277,6 +297,7 @@ $(window).on("scroll", () => {
 
 // Initial fetch
 fetchPosts();
+
   </script>
 </body>
 </html>

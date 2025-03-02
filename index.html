@@ -36,14 +36,12 @@
     }
     #posts-container {
         width: 100%;
-        display: flex;  
-        flex-wrap: wrap;
-
+        display: grid;  
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
       }
     .post {
         margin:1px;
-        width: 100px;
-        flex-grow: 1;
+    
       }
     .post-image {}
     .post-text {min-width: 100px;border:1px solid #FFF;}
@@ -96,6 +94,9 @@
     #arena {
       padding: 120px 0;
     }
+     #posts-container {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+      }
     
  }
 

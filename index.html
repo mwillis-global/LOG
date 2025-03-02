@@ -21,8 +21,7 @@
       font-size: 1.25rem;
       line-height: 1.2;
       margin: 0;
-      background: #000;
-      color: #fff;
+      background:#000;
     }
 
     a {
@@ -41,49 +40,25 @@
     }
 
     #posts-container {
+      padding: 10px;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      padding: 10px;
+      justify-content: center;
     }
 
     .post {
-      background: rgba(30, 30, 30, 0.7);
-      border-radius: 4px;
-      overflow: hidden;
-      display: block;
-      transition: transform 0.3s ease;
-      flex-grow: 1;
-      flex-basis: calc(33.333% - 10px);
-    }
-
-    .post.scale-1 {
-      flex-basis: calc(10% - 10px); /* Small size */
-    }
-
-    .post.scale-2 {
-      flex-basis: calc(20% - 10px); /* Medium size */
-    }
-
-    .post.scale-3 {
-      flex-basis: calc(40% - 10px); /* Large size */
-    }
-
-    .post:hover {
-      transform: scale(1.02);
+      height: 220px;
+      margin: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .post img {
-      width: 100%;
-      height: auto;
-      display: block;
+      max-height: 220px;
     }
 
-    /* For non-image posts */
-    .post.text-post, .post.link-post, .post.media-post {
-      padding: 15px;
-    }
-
+ 
     #fullscreen-overlay {
       position: fixed;
       top: 0;
@@ -94,14 +69,14 @@
       justify-content: center;
       align-items: center;
       z-index: 1000;
+
       backdrop-filter: blur(20px);
-      background-color: rgba(0, 0, 0, 0.7);
+
     }
 
     #fullscreen-overlay img {
-      max-width: 90%;
-      max-height: 90%;
-      object-fit: contain;
+      max-width: 100%;
+      max-height: 80%;
     }
 
     #loading {
@@ -110,14 +85,14 @@
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 1rem;
-      color: #ccc;
+      color: #555;
       display: none;
     }
 
     #loading::after {
       content: '...';
       display: inline-block;
-      animation: dots 1.5s steps(3, end) infinite;
+      /* animation: dots 1.5s steps(3, end) infinite; */
     }
 
     @keyframes dots {
@@ -163,19 +138,6 @@
 
     const removeOverlay = () => {
       $("#fullscreen-overlay").remove();
-    };
-
-    // Function to get random scale class
-    const getRandomScaleClass = () => {
-      // Use weightings to make certain sizes more/less common
-      const rand = Math.random();
-      if (rand < 0.6) {
-        return 'scale-1'; // 60% chance for small size
-      } else if (rand < 0.9) {
-        return 'scale-2'; // 30% chance for medium size
-      } else {
-        return 'scale-3'; // 10% chance for large size
-      }
     };
 
     // Fetch posts from Are.na API
@@ -224,35 +186,36 @@
 
       newPosts.forEach((post) => {
         let postElement;
-        const scaleClass = getRandomScaleClass();
 
         switch (post["class"]) {
           case "Image":
             postElement = $(`
-              <div class="post ${scaleClass}">
+              <div class="post">
                 <img src="${post.image.thumb.url}" alt="${post.generated_title || ''}" 
                      data-full="${post.image.display.url}" 
-                     data-index="${posts.length}">
+                     data-index="${posts.length}" 
+                     data-width="${post.image.original.width}" 
+                     data-height="${post.image.original.height}">
               </div>
             `)[0];
             break;
           case "Text":
             postElement = $(`
-              <div class="post text-post">
+              <div class="post">
                 <div>${post.content_html || "No content"}</div>
               </div>
             `)[0];
             break;
           case "Media":
             postElement = $(`
-              <div class="post media-post">
-                <iframe src="${post.embed.url}" width="100%" height="225" frameborder="0"></iframe>
+              <div class="post">
+                <iframe src="${post.embed.url}" width="300" height="200" frameborder="0"></iframe>
               </div>
             `)[0];
             break;
           case "Link":
             postElement = $(`
-              <div class="post link-post">
+              <div class="post">
                 <a href="${post.source.url}" target="_blank">${post.generated_title || "Link"}</a>
               </div>
             `)[0];
@@ -275,7 +238,7 @@
       const fullSrc = img.data("full");
       const currentIndex = parseInt(img.data("index"), 10);
 
-      const content = `<img src="${fullSrc}" style="max-height: 90%;" data-index="${currentIndex}">`;
+      const content = `<img src="${fullSrc}" style="max-height: 80%;" data-index="${currentIndex}">`;
       showOverlay(content);
     });
 
@@ -289,17 +252,13 @@
       if (event.key === "ArrowRight") {
         const nextIndex = (currentIndex + 1) % posts.length;
         const nextPost = posts[nextIndex];
-        if (nextPost.class === "Image") {
-          fullscreenImg.attr("src", nextPost.image.display.url)
-                      .data("index", nextIndex);
-        }
+        fullscreenImg.attr("src", nextPost.image.display.url)
+                    .data("index", nextIndex);
       } else if (event.key === "ArrowLeft") {
         const prevIndex = (currentIndex - 1 + posts.length) % posts.length;
         const prevPost = posts[prevIndex];
-        if (prevPost.class === "Image") {
-          fullscreenImg.attr("src", prevPost.image.display.url)
-                      .data("index", prevIndex);
-        }
+        fullscreenImg.attr("src", prevPost.image.display.url)
+                    .data("index", prevIndex);
       } else if (event.key === "Escape") {
         removeOverlay();
       }
@@ -312,7 +271,7 @@
 
     // Infinite scroll
     $(window).on("scroll", () => {
-      if ($(window).scrollTop() + $(window).height() >= $(document).height() - 200) {
+      if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
         fetchPosts();
       }
     });

@@ -1,1 +1,1 @@
-https://mwillis.global/world
+https://mwillis.global/log

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>M.WILLIS LOG – ARENA</title>
+  <title>M.WILLIS DOCUMENT – ARENA</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     html {
@@ -16,10 +16,11 @@
     }
     body {
       font-family: Arial, sans-serif;
-      font-size: 1.25rem;
+      font-size: 11px;
       line-height: 1.2;
       margin: 0;
       background:#000;
+    color: #fff;
     }
     a {
       text-decoration: none;
@@ -34,32 +35,23 @@
       margin-top: 20px;
     }
     #posts-container {
-      width: 50vw;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      border:5px solid none;
-      margin: auto;
+        max-width: 80vw;
+        padding-bottom: 100px;
     }
-    .post {
-      max-height: 50vh;
-      border:5px solid none;
-      margin: 2px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    .post {}
+    .post-image {}
+    .post-text {}
+    .post-link {}
+    .post-link-thumbnail{
+        height: 300px;
+        width: 300px;
+        object-fit: cover;
     }
-    .post img {
-      max-height: 80%;
-    }
-    /* Styling for the timestamp */
-    .timestamp {
-      font-size: 0.75rem;
-      color: #fff;
-      text-align: center;
-      margin-top: 4px;
-    }
+    .post-link-content{}
+    .post-media {}
+    .timestamp {margin: 4px;}
+
+      
     #fullscreen-overlay {
       position: fixed;
       top: 0;
@@ -104,183 +96,185 @@
   </div>
 
   <script>
-    const settings = {
-      channelslug: "document-q8laej-t33q"
-    };
+const settings = {
+  channelslug: "document-q8laej-t33q"
+};
 
-    const posts = [];
-    const loadedPosts = new Set(); // Track loaded post IDs
-    const queryOptions = {
-      page: 1, // Start from page 1
-      direction: "desc",
-      sort: "position",
-      per: 48
-    };
+const posts = [];
+const loadedPosts = new Set(); // Track loaded post IDs
+const queryOptions = {
+  page: 1, // Start from page 1
+  direction: "desc",
+  sort: "position",
+  per: 48
+};
 
-    let loading = false;
-    let initialLoad = true; // Flag to check if it's the initial load
+let loading = false;
+let initialLoad = true; // Flag to check if it's the initial load
 
-    // Utility functions for overlay management
-    const showOverlay = (content) => {
-      const overlay = $(`
-        <div id="fullscreen-overlay">
-          ${content}
-        </div>
-      `);
-      $("body").append(overlay);
-    };
+// Utility functions for overlay management
+const showOverlay = (content) => {
+  const overlay = $(
+    `<div id="fullscreen-overlay">${content}</div>`
+  );
+  $("body").append(overlay);
+};
 
-    const removeOverlay = () => {
-      $("#fullscreen-overlay").remove();
-    };
+const removeOverlay = () => {
+  $("#fullscreen-overlay").remove();
+};
 
-    // Fetch posts from Are.na API
-    const fetchPosts = async () => {
-      if (loading) return; // Prevent multiple calls
-      loading = true;
+// Fetch posts from Are.na API
+const fetchPosts = async () => {
+  if (loading) return; // Prevent multiple calls
+  loading = true;
 
-      try {
-        // Show loader only on initial page load
-        if (initialLoad) {
-          $("#loading").show();
-        }
+  try {
+    if (initialLoad) {
+      $("#loading").show();
+    }
 
-        const response = await fetch(
-          `https://api.are.na/v2/channels/${settings.channelslug}/contents?${$.param(queryOptions)}`
-        );
-        if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+    const response = await fetch(
+      `https://api.are.na/v2/channels/${settings.channelslug}/contents?${$.param(queryOptions)}`
+    );
+    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
 
-        const data = await response.json();
+    const data = await response.json();
+    const newPosts = data.contents.filter((post) => !loadedPosts.has(post.id));
+    newPosts.forEach((post) => loadedPosts.add(post.id));
 
-        // Filter new posts
-        const newPosts = data.contents.filter((post) => !loadedPosts.has(post.id));
-        newPosts.forEach((post) => loadedPosts.add(post.id));
+    if (newPosts.length > 0) {
+      addPosts(newPosts);
+      queryOptions.page++;
+    } else {
+      console.log("No new posts to load.");
+    }
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+  } finally {
+    if (initialLoad) {
+      $("#loading").hide();
+      initialLoad = false;
+    }
+    loading = false;
+  }
+};
 
-        if (newPosts.length > 0) {
-          addPosts(newPosts);
-          queryOptions.page++; // Increment page only when new posts are added
-        } else {
-          console.log("No new posts to load.");
-        }
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        // Hide loader after the initial load or after any new data is loaded
-        if (initialLoad) {
-          $("#loading").hide();
-          initialLoad = false; // Only show loader on initial load
-        }
-        loading = false;
-      }
-    };
+// Add multiple posts to the DOM
+const addPosts = (newPosts) => {
+  const fragment = document.createDocumentFragment();
 
-    // Add multiple posts to the DOM
-    const addPosts = (newPosts) => {
-      const fragment = document.createDocumentFragment();
-
-      newPosts.forEach((post) => {
-        let postElement;
-
-        switch (post["class"]) {
-          case "Image":
-            // Format the date into a more readable format
-            const formattedDate = new Date(post.created_at).toLocaleString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            postElement = $(`
-              <div class="post">
-                <img src="${post.image.display.url}" alt="${post.generated_title || ''}" 
-                     data-full="${post.image.display.url}" 
-                     data-index="${posts.length}" 
-                     data-width="${post.image.original.width}" 
-                     data-height="${post.image.original.height}">
-                <div class="timestamp">${formattedDate}</div>
-              </div>
-            `)[0];
-            break;
-          case "Text":
-            postElement = $(`
-              <div class="post">
-                <div>${post.content_html || "No content"}</div>
-              </div>
-            `)[0];
-            break;
-          case "Media":
-            postElement = $(`
-              <div class="post">
-                <iframe src="${post.embed.url}" width="300" height="200" frameborder="0"></iframe>
-              </div>
-            `)[0];
-            break;
-          case "Link":
-            postElement = $(`
-              <div class="post">
-                <a href="${post.source.url}" target="_blank">${post.generated_title || "Link"}</a>
-              </div>
-            `)[0];
-            break;
-          default:
-            console.warn("Unknown post type:", post);
-            return;
-        }
-
-        fragment.appendChild(postElement);
-        posts.push(post); // Add to posts array
-      });
-
-      $("#posts-container").append(fragment);
-    };
-
-    // Fullscreen and navigation functionality
-    $(document).on("click", ".post img", function () {
-      const img = $(this);
-      const fullSrc = img.data("full");
-      const currentIndex = parseInt(img.data("index"), 10);
-
-      const content = `<img src="${fullSrc}" style="max-height: 80%;" data-index="${currentIndex}">`;
-      showOverlay(content);
+  newPosts.forEach((post) => {
+    let postElement;
+    const formattedDate = new Date(post.created_at).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
 
-    $(document).on("keydown", function (event) {
-      const fullscreenOverlay = $("#fullscreen-overlay");
-      if (!fullscreenOverlay.length) return;
+    switch (post["class"]) {
+      case "Image":
+        postElement = $(
+          `<div class="post">
+            <img class="post-image" src="${post.image.display.url}" alt="${post.generated_title || ''}" 
+                 data-full="${post.image.display.url}" 
+                 data-index="${posts.length}" 
+                 data-width="${post.image.original.width}" 
+                 data-height="${post.image.original.height}">
+            <div class="timestamp">${formattedDate}</div>
+          </div>`
+        )[0];
+        break;
 
-      const fullscreenImg = fullscreenOverlay.find("img");
-      const currentIndex = parseInt(fullscreenImg.data("index"), 10);
+      case "Text":
+        postElement = $(
+          `<div class="post">
+            <div class="post-text">${post.content_html || "No content"}</div>
+            <div class="timestamp">${formattedDate}</div>
+          </div>`
+        )[0];
+        break;
 
-      if (event.key === "ArrowRight") {
-        const nextIndex = (currentIndex + 1) % posts.length;
-        const nextPost = posts[nextIndex];
-        fullscreenImg.attr("src", nextPost.image.display.url)
-                    .data("index", nextIndex);
-      } else if (event.key === "ArrowLeft") {
-        const prevIndex = (currentIndex - 1 + posts.length) % posts.length;
-        const prevPost = posts[prevIndex];
-        fullscreenImg.attr("src", prevPost.image.display.url)
-                    .data("index", prevIndex);
-      } else if (event.key === "Escape") {
-        removeOverlay();
-      }
-    });
+      case "Media":
+        postElement = $(
+          `<div class="post post-media">
+            <div class="media-content">
+              <iframe src="${post.embed.url}" width="300" height="200" frameborder="0" allowfullscreen></iframe></div>
+            <div class="timestamp">${formattedDate}</div>
+          </div>`
+        )[0];
+        break;
 
-    // Close fullscreen on overlay click
-    $(document).on("click", "#fullscreen-overlay", function () {
-      removeOverlay();
-    });
+      case "Link":
+        postElement = $(
+          `<div class="post post-link">
+            <a href="${post.source.url}" target="_blank">
+              ${post.image ? `<img class="post-link-thumbnail" src="${post.image.display.url}" alt="Thumbnail">` : ''}
+              <div class="post-link-content">${post.generated_title || "Link"}</div></a>
+              <div class="timestamp">${formattedDate}</div>
+          </div>`
+        )[0];
+        break;
 
-    // Infinite scroll
-    $(window).on("scroll", () => {
-      if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
-        fetchPosts();
-      }
-    });
+      default:
+        console.warn("Unknown post type:", post);
+        return;
+    }
 
-    // Initial fetch
+    fragment.appendChild(postElement);
+    posts.push(post);
+  });
+
+  $("#posts-container").append(fragment);
+};
+
+// Fullscreen and navigation functionality
+$(document).on("click", ".post-image", function () {
+  const img = $(this);
+  const fullSrc = img.data("full");
+  const currentIndex = parseInt(img.data("index"), 10);
+
+  const content = `<img src="${fullSrc}" style="max-height: 80%;" data-index="${currentIndex}">`;
+  showOverlay(content);
+});
+
+$(document).on("keydown", function (event) {
+  const fullscreenOverlay = $("#fullscreen-overlay");
+  if (!fullscreenOverlay.length) return;
+
+  const fullscreenImg = fullscreenOverlay.find("img");
+  const currentIndex = parseInt(fullscreenImg.data("index"), 10);
+
+  if (event.key === "ArrowRight") {
+    const nextIndex = (currentIndex + 1) % posts.length;
+    const nextPost = posts[nextIndex];
+    fullscreenImg.attr("src", nextPost.image.display.url)
+                .data("index", nextIndex);
+  } else if (event.key === "ArrowLeft") {
+    const prevIndex = (currentIndex - 1 + posts.length) % posts.length;
+    const prevPost = posts[prevIndex];
+    fullscreenImg.attr("src", prevPost.image.display.url)
+                .data("index", prevIndex);
+  } else if (event.key === "Escape") {
+    removeOverlay();
+  }
+});
+
+$(document).on("click", "#fullscreen-overlay", function () {
+  removeOverlay();
+});
+
+// Infinite scroll
+$(window).on("scroll", () => {
+  if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
     fetchPosts();
+  }
+});
+
+// Initial fetch
+fetchPosts();
   </script>
 </body>
 </html>

@@ -45,7 +45,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       grid-auto-rows: 10px;
-      grid-gap: 10px;
+      grid-gap: 15px;
     }
 
     .post {
@@ -57,16 +57,31 @@
       justify-content: center;
       align-items: center;
       transition: transform 0.3s ease;
+      position: relative;
     }
 
     .post:hover {
       transform: scale(1.02);
     }
 
-    .post img {
+    .post.image-post {
+      padding: 0;
+    }
+
+    .post-content {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .post img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
     }
 
     .post.size-1 {
@@ -250,33 +265,39 @@
             );
             
             postElement = $(`
-              <div class="post ${sizeClass}">
-                <img src="${post.image.thumb.url}" alt="${post.generated_title || ''}" 
-                     data-full="${post.image.display.url}" 
-                     data-index="${posts.length}" 
-                     data-width="${post.image.original.width}" 
-                     data-height="${post.image.original.height}">
+              <div class="post image-post ${sizeClass}">
+                <div class="post-content">
+                  <img src="${post.image.thumb.url}" alt="${post.generated_title || ''}" 
+                       data-full="${post.image.display.url}" 
+                       data-index="${posts.length}" 
+                       data-width="${post.image.original.width}" 
+                       data-height="${post.image.original.height}">
+                </div>
               </div>
             `)[0];
             break;
           case "Text":
             postElement = $(`
               <div class="post text-post ${getRandomSizeClass()}">
-                <div>${post.content_html || "No content"}</div>
+                <div class="post-content">${post.content_html || "No content"}</div>
               </div>
             `)[0];
             break;
           case "Media":
             postElement = $(`
               <div class="post media-post ${getRandomSizeClass()}">
-                <iframe src="${post.embed.url}" width="100%" height="100%" frameborder="0"></iframe>
+                <div class="post-content">
+                  <iframe src="${post.embed.url}" width="100%" height="100%" frameborder="0"></iframe>
+                </div>
               </div>
             `)[0];
             break;
           case "Link":
             postElement = $(`
               <div class="post link-post ${getRandomSizeClass()}">
-                <a href="${post.source.url}" target="_blank">${post.generated_title || "Link"}</a>
+                <div class="post-content">
+                  <a href="${post.source.url}" target="_blank">${post.generated_title || "Link"}</a>
+                </div>
               </div>
             `)[0];
             break;
@@ -291,22 +312,42 @@
 
       $("#posts-container").append(fragment);
       
-      // Reshuffle sizes occasionally for visual interest
-      if (Math.random() > 0.8) {
-        reshuffleSizes();
-      }
+      // Apply dynamic sizing to ensure images fit correctly
+      adjustImageSizes();
     };
 
-    // Reshuffle sizes for some visual variety
-    const reshuffleSizes = () => {
-      $('.post').each(function() {
-        // 30% chance to change a post's size
-        if (Math.random() > 0.7) {
-          // Remove existing size classes
-          $(this).removeClass('size-1 size-2 size-3');
-          // Add a new random size
-          $(this).addClass(getRandomSizeClass());
-        }
+    // Function to adjust image sizing to prevent cropping
+    const adjustImageSizes = () => {
+      $('.post.image-post').each(function() {
+        const post = $(this);
+        const img = post.find('img');
+        const postHeight = post.height();
+        
+        // If image is loaded, check if we need to adjust the post height
+        img.on('load', function() {
+          const imgHeight = img[0].naturalHeight;
+          const imgWidth = img[0].naturalWidth;
+          
+          // Ensure the post is tall enough for the image
+          if (imgHeight > 0 && imgWidth > 0) {
+            const imgRatio = imgWidth / imgHeight;
+            const postWidth = post.width();
+            const neededHeight = postWidth / imgRatio;
+            
+            // If the needed height is greater than current post height, adjust size class
+            if (neededHeight > postHeight) {
+              // Find the appropriate size class
+              post.removeClass('size-1 size-2 size-3');
+              if (neededHeight > 300) {
+                post.addClass('size-3');
+              } else if (neededHeight > 200) {
+                post.addClass('size-2');
+              } else {
+                post.addClass('size-1');
+              }
+            }
+          }
+        });
       });
     };
 
@@ -349,6 +390,11 @@
     // Close fullscreen on overlay click
     $(document).on("click", "#fullscreen-overlay", function () {
       removeOverlay();
+    });
+
+    // Recalculate image sizes on window resize
+    $(window).on("resize", function() {
+      adjustImageSizes();
     });
 
     // Infinite scroll

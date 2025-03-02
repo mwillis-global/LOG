@@ -41,37 +41,32 @@
     }
 
     #posts-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       padding: 10px;
-      column-count: 4;
-      column-gap: 10px;
-    }
-
-    @media (max-width: 1200px) {
-      #posts-container {
-        column-count: 3;
-      }
-    }
-
-    @media (max-width: 800px) {
-      #posts-container {
-        column-count: 2;
-      }
-    }
-
-    @media (max-width: 500px) {
-      #posts-container {
-        column-count: 1;
-      }
     }
 
     .post {
-      break-inside: avoid;
-      margin-bottom: 10px;
       background: rgba(30, 30, 30, 0.7);
       border-radius: 4px;
       overflow: hidden;
       display: block;
       transition: transform 0.3s ease;
+      flex-grow: 1;
+      flex-basis: calc(33.333% - 10px);
+    }
+
+    .post.scale-1 {
+      flex-basis: calc(25% - 10px); /* Small size */
+    }
+
+    .post.scale-2 {
+      flex-basis: calc(50% - 10px); /* Medium size */
+    }
+
+    .post.scale-3 {
+      flex-basis: calc(75% - 10px); /* Large size */
     }
 
     .post:hover {
@@ -82,19 +77,6 @@
       width: 100%;
       height: auto;
       display: block;
-    }
-
-    /* Scale factors for random sizing */
-    .post.scale-1 img {
-      transform: scale(1);
-    }
-
-    .post.scale-2 img {
-      transform: scale(1.25);
-    }
-
-    .post.scale-3 img {
-      transform: scale(1.5);
     }
 
     /* For non-image posts */
@@ -188,7 +170,7 @@
       // Use weightings to make certain sizes more/less common
       const rand = Math.random();
       if (rand < 0.6) {
-        return 'scale-1'; // 60% chance for normal size
+        return 'scale-1'; // 60% chance for small size
       } else if (rand < 0.9) {
         return 'scale-2'; // 30% chance for medium size
       } else {
